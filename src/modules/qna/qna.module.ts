@@ -6,6 +6,7 @@ import { APIResponse } from 'src/internal/api-response/api-response.service';
 import { QnARepository } from './qna.repository';
 import { DatabaseService } from '../database/database.service';
 import { GeminiService } from '../gemini/gemini.service';
+import { LocalAIService } from '../local-ai/local-ai.service';
 
 @Module({
   controllers: [QnAController],
@@ -16,6 +17,7 @@ import { GeminiService } from '../gemini/gemini.service';
     PaginationService,
     APIResponse,
     GeminiService,
+    LocalAIService,
   ],
   exports: [QnAService, QnARepository],
 })
