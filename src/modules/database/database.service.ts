@@ -12,6 +12,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       user: this.configService.get('POSTGRES_USER'),
       password: this.configService.get('POSTGRES_PASSWORD'),
       database: this.configService.get('POSTGRES_DATABASE'),
+      ssl: true,
     });
   }
 
