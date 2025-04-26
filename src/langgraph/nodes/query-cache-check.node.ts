@@ -18,10 +18,11 @@ export class QueryCacheCheckNode extends BaseNode {
       url: process.env.REDIS_URL || 'redis://localhost:6379',
     });
 
-    this.redisClient.on('error', (err) => {
-      this.logger.warn('Redis connection error:', err);
-      this.redisConnected = false;
-    });
+    // todo
+    // this.redisClient.on('error', (err) => {
+    //   this.logger.warn('Redis connection error:', err);
+    //   this.redisConnected = false;
+    // });
 
     this.redisClient.on('connect', () => {
       this.logger.info('Redis connected successfully');
