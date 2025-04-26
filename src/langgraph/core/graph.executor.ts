@@ -1,42 +1,45 @@
-import { GraphConfig, GraphNode, NodeInput, NodeOutput, SearchState, NodeContext } from '../types/base.types';
+import { Injectable } from '@nestjs/common';
+import { SearchState } from '../types/base.types';
+import { createGraphConfig } from '../config/graph.config';
 import { Logger } from '../utils/logger';
 import { MetricsCollector } from './metrics.collector';
 import * as winston from 'winston';
 
+@Injectable()
 export class GraphExecutor {
-  private readonly config: GraphConfig;
+  private readonly config;
   private readonly logger: winston.Logger;
   private readonly metrics: MetricsCollector;
-  private readonly nodeMap: Map<string, GraphNode>;
 
-  constructor(config: GraphConfig, logger: winston.Logger) {
-    this.config = config;
-    this.logger = logger;
-    this.metrics = new MetricsCollector(logger);
-    this.nodeMap = new Map(config.nodes.map(node => [node.name, node]));
+  constructor() {
+    this.config = createGraphConfig();
+    this.logger = winston.createLogger({
+      level: 'info',
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json(),
+      ),
+      transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'logs/graph-executor.log' }),
+      ],
+    });
+    this.metrics = new MetricsCollector(this.logger);
   }
 
-  public async execute(query: string, context: { requestId: string; timestamp: string }): Promise<SearchState> {
+  async execute(query: string, metadata: any): Promise<SearchState> {
     try {
-      this.logger.info('Starting graph execution', { service: 'graph-executor' });
-
       // Initialize the state
-      const initialState: SearchState = {
+      let state: SearchState = {
         query,
         enhancedQuery: query,
-        intent: {
-          type: 'unknown',
-          confidence: 0,
-          parameters: {},
-        },
-        searchResults: [],
-        rankedResults: [],
-        finalResponse: '',
-        cache: {
-          queryHit: false,
-          resultHit: false,
-          cacheKey: '',
-          timestamp: Date.now(),
+        metadata: {
+          ...metadata,
+          processingTime: 0,
+          resourceUsage: {
+            memory: 0,
+            cpu: 0,
+          },
         },
         guardrails: {
           inputValidation: {
@@ -44,8 +47,8 @@ export class GraphExecutor {
             checks: {
               length: false,
               charset: false,
-              rateLimit: true,
-              ipCheck: true,
+              rateLimit: false,
+              ipCheck: false,
               syntax: false,
             },
           },
@@ -70,100 +73,47 @@ export class GraphExecutor {
             },
           },
         },
-        metadata: {
-          timestamp: Date.now(),
-          processingTime: 0,
-          resourceUsage: {
-            memory: 0,
-            cpu: 0,
-            network: 0,
-          },
-          error: null,
-          recoveryAttempted: false,
+        cache: {
+          queryHit: false,
+          resultHit: false,
+          cacheKey: '',
+          timestamp: 0,
         },
+        intent: {
+          type: 'unknown',
+          confidence: 0,
+          parameters: {},
+        },
+        searchResults: [],
+        rankedResults: [],
+        finalResponse: '',
       };
 
-      // Create node context
-      const nodeContext: NodeContext = {
-        config: {
-          name: 'graph-executor',
-          description: 'Main graph executor',
-          timeout: 30000,
-          retryAttempts: 3,
-          fallbackStrategy: 'error-handler',
-        },
-        logger: this.logger,
-        metrics: this.metrics,
-      };
-
-      // Execute the graph
-      let currentState = initialState;
+      // Start from the entry point
       let currentNode = this.config.entryPoint;
+      const startTime = Date.now();
 
-      while (currentNode !== 'end') {
-        const node = this.nodeMap.get(currentNode);
+      while (currentNode && currentNode !== this.config.exitPoint) {
+        const node = this.config.nodes[currentNode];
         if (!node) {
-          throw new Error(`Node ${currentNode} not found in graph configuration`);
+          throw new Error(`Node ${currentNode} not found`);
         }
 
-        try {
-          const input: NodeInput = { state: currentState, context: nodeContext };
-          const result = await this.executeNodeWithRetry(node, input);
-          currentState = result.state;
-          currentNode = result.next;
-
-          // Record metrics
-          const nodeDuration = Date.now() - currentState.metadata.timestamp;
-          this.metrics.recordNodeExecution(node.name, nodeDuration, !currentState.metadata.error);
-          this.logger.debug(`Node ${node.name} completed`, {
-            duration: nodeDuration,
-            nextNode: currentNode,
-            success: !currentState.metadata.error,
-          });
-        } catch (error) {
-          this.logger.error('Error executing node', {
-            node: currentNode,
-            error,
-            state: currentState,
-          });
-          currentState.metadata.error = error as Error;
-          currentNode = node.config.fallbackStrategy || 'error-handler';
-        }
+        // Process the current node
+        state = await node.process({ state });
+        
+        // Determine the next node
+        currentNode = node.determineNextNode(state);
       }
 
-      // Record overall execution metrics
-      const totalDuration = Date.now() - initialState.metadata.timestamp;
-      this.metrics.recordGraphExecution(totalDuration, !currentState.metadata.error);
-      this.logger.info('Graph execution completed', {
-        duration: totalDuration,
-        success: !currentState.metadata.error,
-      });
+      // Calculate processing time
+      state.metadata.processingTime = Date.now() - startTime;
 
-      return currentState;
+      return state;
     } catch (error) {
-      this.logger.error('Error in graph execution', { error });
+      this.logger.error('Graph execution failed:', error);
       throw error;
     }
-  }
-
-  private async executeNodeWithRetry(node: GraphNode, input: NodeInput): Promise<NodeOutput> {
-    let attempts = 0;
-    const maxAttempts = node.config.retryAttempts || 3;
-
-    while (attempts < maxAttempts) {
-      try {
-        return await node.execute(input);
-      } catch (error) {
-        attempts++;
-        if (attempts === maxAttempts) {
-          throw error;
-        }
-        this.logger.warn(`Retrying node ${node.name}, attempt ${attempts}`, { error });
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempts)); // Exponential backoff
-      }
-    }
-
-    throw new Error(`Failed to execute node ${node.name} after ${maxAttempts} attempts`);
   }
 
   public getNodeMetrics(): Record<string, any> {

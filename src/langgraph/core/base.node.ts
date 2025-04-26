@@ -1,20 +1,37 @@
 import { NodeConfig, NodeContext, NodeInput, NodeOutput, SearchState } from '../types/base.types';
 
 export abstract class BaseNode {
-  public config: NodeConfig;
-  protected context: NodeContext;
+  public readonly config: NodeConfig;
+  protected readonly context: NodeContext;
 
   constructor(config: NodeConfig, context: NodeContext) {
     this.config = config;
     this.context = context;
   }
 
-  public async process(input: NodeInput): Promise<SearchState> {
-    throw new Error('process method must be implemented by subclass');
-  }
+  public abstract process(input: NodeInput): Promise<SearchState>;
 
-  public determineNextNode(state: SearchState): string {
-    throw new Error('determineNextNode method must be implemented by subclass');
+  public abstract determineNextNode(state: SearchState): string;
+
+  protected async executeWithRetry(input: NodeInput): Promise<SearchState> {
+    let attempts = 0;
+    const maxAttempts = this.config.retryAttempts || 3;
+
+    while (attempts < maxAttempts) {
+      try {
+        return await this.process(input);
+      } catch (error) {
+        attempts++;
+        if (attempts === maxAttempts) {
+          this.context.logger.error(`Failed to execute node ${this.config.name} after ${maxAttempts} attempts`, error);
+          throw error;
+        }
+        this.context.logger.warn(`Retrying node ${this.config.name}, attempt ${attempts}`, error);
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempts)); // Exponential backoff
+      }
+    }
+
+    throw new Error(`Failed to execute node ${this.config.name} after ${maxAttempts} attempts`);
   }
 
   public async execute(input: NodeInput): Promise<NodeOutput> {
@@ -63,7 +80,7 @@ export abstract class BaseNode {
 
       // Use fallback strategy if available
       if (this.config.fallbackStrategy) {
-        nextNode = this.config.fallbackStrategy;
+        nextNode = this.config.fallbackStrategy.type;
       }
 
       return {
