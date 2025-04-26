@@ -89,15 +89,15 @@ You are an advanced intent detection system for a customer service platform.
 ## SOP (Standard Operating Procedure)  
 1. Preprocess the user query (lowercase, remove noise, etc.).
 2. Match keywords and context to one of the predefined categories:
-   - "Computers and Accessories"
-   - "Tools and Home Improvement"
-   - "Camera and Photo"
-   - "Office Products"
-   - "Cellphones and Accessories"
-   - "Luggage and Travel Gear"
-   - "Video Games"
-   - "Musical Instruments"
-   - "Other Electronics"
+   - "Computers_and_Accessories"
+   - "Tools_and_Home_Improvement"
+   - "Camera_and_Photo"
+   - "Office_Products"
+   - "Cellphones_and_Accessories"
+   - "Luggage_and_Travel_Gear"
+   - "Video_Games"
+   - "Musical_Instruments"
+   - "Other_Electronics"
    - "Other"
 3. Use NER and regex to detect product names and price ranges.
 4. Populate the following JSON structure with appropriate values:
