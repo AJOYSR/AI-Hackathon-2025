@@ -13,8 +13,8 @@ import { QnAModule } from './modules/qna/qna.module';
 import * as path from 'path';
 import { RequestLoggerMiddleware } from './internal/middlewares/request-logger.middleware';
 import { GeminiModule } from './modules/gemini/gemini.module';
-import { SearchModule } from './search/search.module';
 import { MonitoringModule } from './monitoring/monitoring.module';
+import { SearchPipelineModule } from './modules/search-pipeline/search-pipeline.module';
 
 @Module({
   imports: [
@@ -38,8 +38,8 @@ import { MonitoringModule } from './monitoring/monitoring.module';
     DatabaseModule,
     QnAModule,
     GeminiModule,
-    SearchModule,
     MonitoringModule,
+    SearchPipelineModule,
   ],
 })
 export class AppModule {

@@ -12,7 +12,8 @@ describe('InputGuardrailsNode', () => {
     config = {
       name: 'test-node',
       description: 'Test node',
-      timeout: 5000,
+      priority: 1,
+      timeoutMs: 5000,
       retryAttempts: 3
     };
 
@@ -20,7 +21,7 @@ describe('InputGuardrailsNode', () => {
     context = {
       config,
       logger,
-      metrics: new MetricsCollector(logger, 'input-guardrails-test')
+      metrics: new MetricsCollector(logger)
     };
 
     node = new InputGuardrailsNode(config, context);

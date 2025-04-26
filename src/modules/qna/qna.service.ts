@@ -20,11 +20,13 @@ export class QnAService {
   ) {}
 
   async searchCosineByQuery(searchDto: SearchVectorByQueryDto, intent: any) {
-    const { businessId, limit = 5 } = searchDto;
+    const { businessId, limit = 5, question } = searchDto;
 
-    const embeddingRes = await this.geminiService.generateEmbeddings(
-      intent.title,
-    );
+    if (!question || question.trim().length === 0) {
+      throw new Error('Question cannot be empty');
+    }
+
+    const embeddingRes = await this.geminiService.generateEmbeddings(question);
     const embedding = JSON.stringify(embeddingRes);
 
     const results = await this.qnaRepo.searchCosineByQuery(

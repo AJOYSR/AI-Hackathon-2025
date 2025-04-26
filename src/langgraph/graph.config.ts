@@ -12,57 +12,85 @@ export const createGraphConfig = (context: any): GraphConfig => {
   const inputGuardrailsNode = new InputGuardrailsNode({
     name: 'input-guardrails',
     description: 'Input validation and sanitization',
-    timeout: 5000,
+    priority: 1,
     retryAttempts: 2,
-    fallbackStrategy: 'error-handler',
+    fallbackStrategy: {
+      type: 'fail',
+      maxRetries: 2,
+      backoffMs: 1000
+    }
   }, context);
 
   const queryCacheCheckNode = new QueryCacheCheckNode({
     name: 'query-cache-check',
-    description: 'Cache lookup and management',
-    timeout: 3000,
+    description: 'Checks for cached results',
+    priority: 2,
     retryAttempts: 1,
-    fallbackStrategy: 'intent-classifier',
+    fallbackStrategy: {
+      type: 'skip',
+      maxRetries: 1,
+      backoffMs: 500
+    }
   }, context);
 
   const intentClassifierNode = new IntentClassifierNode({
     name: 'intent-classifier',
     description: 'Intent classification and parameter extraction',
-    timeout: 10000,
+    priority: 3,
     retryAttempts: 2,
-    fallbackStrategy: 'error-handler',
+    fallbackStrategy: {
+      type: 'fail',
+      maxRetries: 2,
+      backoffMs: 1000
+    }
   }, context);
 
   const searchExecutorNode = new SearchExecutorNode({
     name: 'search-executor',
     description: 'Search execution and result retrieval',
-    timeout: 15000,
+    priority: 4,
     retryAttempts: 2,
-    fallbackStrategy: 'error-handler',
+    fallbackStrategy: {
+      type: 'fail',
+      maxRetries: 2,
+      backoffMs: 1000
+    }
   }, context);
 
   const resultRankerNode = new ResultRankerNode({
     name: 'result-ranker',
     description: 'Result ranking and filtering',
-    timeout: 8000,
+    priority: 5,
     retryAttempts: 2,
-    fallbackStrategy: 'error-handler',
+    fallbackStrategy: {
+      type: 'fail',
+      maxRetries: 2,
+      backoffMs: 1000
+    }
   }, context);
 
   const responseFormatterNode = new ResponseFormatterNode({
     name: 'response-formatter',
     description: 'Response formatting and presentation',
-    timeout: 5000,
+    priority: 6,
     retryAttempts: 1,
-    fallbackStrategy: 'error-handler',
+    fallbackStrategy: {
+      type: 'fail',
+      maxRetries: 1,
+      backoffMs: 500
+    }
   }, context);
 
   const errorHandlerNode = new ErrorHandlerNode({
     name: 'error-handler',
     description: 'Error handling and recovery',
-    timeout: 10000,
+    priority: 7,
     retryAttempts: 1,
-    fallbackStrategy: 'end',
+    fallbackStrategy: {
+      type: 'fail',
+      maxRetries: 1,
+      backoffMs: 500
+    }
   }, context);
 
   // Define the graph configuration
