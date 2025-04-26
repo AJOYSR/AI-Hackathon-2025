@@ -2,6 +2,10 @@
 
 A custom chatbot built with NestJS, MongoDB, PostgreSQL with pgvector extension for vector similarity search. This project implements a sophisticated chatbot system with authentication, monitoring, and vector-based search capabilities.
 
+## Architechture
+![Editor _ Mermaid Chart-2025-04-26-162507](https://github.com/user-attachments/assets/c237183d-ff4f-4337-a858-7f49d075f93d)
+
+
 ## Features
 
 - Vector similarity search using pgvector
