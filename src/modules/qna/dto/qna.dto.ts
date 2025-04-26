@@ -76,6 +76,22 @@ export class SearchVectorByQuestionDto {
   limit?: number;
 }
 
+export class SearchVectorByQueryDto {
+  @ApiProperty({ required: true })
+  @IsString({ message: 'validation.isString' })
+  question: string;
+
+  @ApiProperty({ required: false })
+  @IsString({ message: 'validation.isString' })
+  @IsOptional()
+  businessId?: string;
+
+  @ApiProperty({ required: false, default: 5 })
+  @IsNumber({}, { message: 'validation.isNumber' })
+  @IsOptional()
+  limit?: number;
+}
+
 export class SearchVectorDto {
   @ApiProperty({
     description: 'The vector embedding to search with',
