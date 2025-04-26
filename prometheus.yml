@@ -4,5 +4,5 @@ global:
 scrape_configs:
   - job_name: 'custom-chatbot'
     static_configs:
-      - targets: ['10.112.62.242:3000']
+      - targets: ['192.168.43.136:3000']
     metrics_path: '/api/metrics'
