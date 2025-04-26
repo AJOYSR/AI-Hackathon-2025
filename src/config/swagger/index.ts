@@ -12,11 +12,10 @@ const {
 } = process.env;
 
 export const swaggerConfig = {
-  title: SWAGGER_TITLE || 'Custom Chatbot API',
-  description:
-    SWAGGER_DESCRIPTION || 'NestJS Chatbot API with pgvector API documentation',
+  title: SWAGGER_TITLE || 'API Documentation',
+  description: SWAGGER_DESCRIPTION || 'API Documentation',
   version: SWAGGER_VERSION || '1.0',
-  tags: SWAGGER_TAGS || 'Custom chatbot API documentation',
+  tags: SWAGGER_TAGS || 'API Documentation',
   auth: {
     type: SWAGGER_AUTH_TYPE || 'http',
     schema: SWAGGER_AUTH_SCHEMA || 'bearer',
