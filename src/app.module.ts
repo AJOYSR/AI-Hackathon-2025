@@ -19,6 +19,7 @@ import { UnresolvedQueryModule } from './modules/message/unresolved-message.modu
 import { ProfileModule } from './modules/profile/profile.module';
 import { RequestLoggerMiddleware } from './internal/middlewares/request-logger.middleware';
 import { GeminiModule } from './modules/gemini/gemini.module';
+import { SearchModule } from './search/search.module';
 import { MonitoringModule } from './monitoring/monitoring.module';
 
 @Module({
@@ -49,6 +50,7 @@ import { MonitoringModule } from './monitoring/monitoring.module';
     QnAModule,
     ProfileModule,
     GeminiModule,
+    SearchModule,
     MonitoringModule,
   ],
 })
