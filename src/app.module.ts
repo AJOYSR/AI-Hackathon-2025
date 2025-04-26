@@ -19,6 +19,7 @@ import { UnresolvedQueryModule } from './modules/message/unresolved-message.modu
 import { ProfileModule } from './modules/profile/profile.module';
 import { RequestLoggerMiddleware } from './internal/middlewares/request-logger.middleware';
 import { GeminiModule } from './modules/gemini/gemini.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { GeminiModule } from './modules/gemini/gemini.module';
     QnAModule,
     ProfileModule,
     GeminiModule,
+    SearchModule,
   ],
 })
 export class AppModule {

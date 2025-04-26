@@ -11,6 +11,7 @@ import { coreConfig } from './config/core';
 import { ValidationPipe } from './decorators/validation.pipe';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as path from 'path';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   // Connect to the database
@@ -40,6 +41,16 @@ async function bootstrap() {
 
   // Swagger setup
   SwaggerConfig(app);
+
+  // Configure Swagger documentation
+  const config = new DocumentBuilder()
+    .setTitle('AI Search API')
+    .setDescription('AI-powered search pipeline with intent classification, ranking, and guardrails')
+    .setVersion('1.0')
+    .addTag('Search')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document);
 
   // Initialize I18nModule and inject I18nService into AllExceptionsFilter
   const i18nService =
