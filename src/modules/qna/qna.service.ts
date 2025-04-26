@@ -68,7 +68,6 @@ export class QnAService {
     );
     return this.apiResponse.success(results);
   }
-
   async bestPossibleResultByQuery(
     searchDto: SearchVectorByQuestionDto,
   ): Promise<QnaListResponseDto> {
@@ -112,29 +111,47 @@ export class QnAService {
       }
     });
 
-    // Sort by combined score, filter values > 0.40, and limit
+    // Sort by combined score and apply base filtering
+    // FIX: Using more reasonable filtering conditions - only check combined_score
     const sortedResults = Array.from(combinedResults.values())
-      .filter(
-        (result) =>
-          result.cosine_similarity > 0.4 &&
-          result.cosine_score > 0.4 &&
-          result.hybrid_score > 0.4 &&
-          result.combined_score > 0.4,
-      )
+      .filter((result) => result.combined_score > 0.4)
       .sort((a, b) => b.combined_score - a.combined_score)
       .slice(0, searchDto.limit || 5);
 
-    console.log('🚀 ~ QnAService ~ sortedResults:1', sortedResults);
-    if (intent.category !== 'Other') {
-      // Assign the filtered results back to sortedResults
-      const filteredResults = sortedResults.filter(
+    // Apply category filtering if applicable
+    let categoryFilteredResults = sortedResults;
+    if (intent.category && intent.category !== 'Other') {
+      categoryFilteredResults = sortedResults.filter(
         (result) => result.category === intent.category,
       );
-      console.log('🚀 ~ QnAService ~ filteredResults:', filteredResults);
-      return this.apiResponse.success(filteredResults);
     }
 
-    return this.apiResponse.success(sortedResults);
+    // FIX: Apply price filtering in one place only
+    let finalResults = categoryFilteredResults;
+    if (intent.min_price || intent.max_price) {
+      finalResults = categoryFilteredResults.filter((result) => {
+        // Skip price filtering if price is empty or not a valid number
+        if (!result.price) return true;
+
+        const price = parseFloat(result.price);
+        if (isNaN(price)) return true;
+
+        const minPrice = intent.min_price ? parseFloat(intent.min_price) : null;
+
+        const maxPrice = intent.max_price ? parseFloat(intent.max_price) : null;
+
+        if (minPrice !== null && maxPrice !== null) {
+          return price >= minPrice && price <= maxPrice;
+        } else if (minPrice !== null) {
+          return price >= minPrice;
+        } else if (maxPrice !== null) {
+          return price <= maxPrice;
+        }
+        return true;
+      });
+    }
+
+    return this.apiResponse.success(finalResults);
   }
 
   async importProducts() {
@@ -183,6 +200,6 @@ export class QnAService {
         embedding,
       );
     }
-    return 'Sucessful';
+    return 'Successfully imported products';
   }
 }
