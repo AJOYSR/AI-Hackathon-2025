@@ -48,4 +48,19 @@ export class QnAController {
   async bestPossibleResultByQuery(@Body() searchDto: SearchVectorByQueryDto) {
     return this.qnaService.bestPossibleResultByQuery(searchDto);
   }
+
+  @Post('search/local/best-by-query')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Search vectors using hybrid and cosine similarity',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Return vectors sorted by hybrid score',
+  })
+  async localBestPossibleResultByQuery(
+    @Body() searchDto: SearchVectorByQueryDto,
+  ) {
+    return this.qnaService.localBestPossibleResultByQuery(searchDto);
+  }
 }
